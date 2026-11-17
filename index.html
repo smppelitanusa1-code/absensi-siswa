@@ -182,6 +182,7 @@ td.num,th.num{text-align:right}
 .diag li{display:flex;justify-content:space-between;gap:12px;padding:6px 12px;border-top:1px solid var(--line)}
 .diag li:first-child{border-top:0}
 .diag li b{text-align:right;font-weight:600}
+.steps{margin:0;padding-left:22px;display:grid;gap:6px;font-size:14.5px}
 .pinerr{color:var(--err);font-weight:600;margin-top:8px;min-height:1.4em}
 .set .panel{display:flex;flex-direction:column;gap:12px}
 .chk{display:flex;gap:10px;align-items:center;font-weight:560}
@@ -242,11 +243,11 @@ td.num,th.num{text-align:right}
     <button class="nav" data-v="siswa"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c.4-3.2 2.7-5 5.5-5s5.1 1.8 5.5 5M16 5.2a3 3 0 0 1 0 5.6M17.5 14.4c1.8.6 3 2.2 3.3 4.6"/></svg>Siswa<svg class="lock" viewBox="0 0 24 24" aria-label="terkunci"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></button>
     <button class="nav" data-v="kartu"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 15V9M10 15V9M13 15V9M16 15V9"/></svg>Kartu<svg class="lock" viewBox="0 0 24 24" aria-label="terkunci"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></button>
     <button class="nav" data-v="data"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1.2l2-1.6-2-3.4-2.4 1a7 7 0 0 0-2-1.2L14 3h-4l-.5 2.6a7 7 0 0 0-2 1.2l-2.4-1-2 3.4 2 1.6A7 7 0 0 0 5 12c0 .4 0 .8.1 1.2l-2 1.6 2 3.4 2.4-1a7 7 0 0 0 2 1.2L10 21h4l.5-2.6a7 7 0 0 0 2-1.2l2.4 1 2-3.4-2-1.6c.1-.4.1-.8.1-1.2z"/></svg>Pengaturan<svg class="lock" viewBox="0 0 24 24" aria-label="terkunci"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></button>
-    <button class="nav" id="btnLogout"><svg viewBox="0 0 24 24"><path d="M9 4H6a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h3M15 8l4 4-4 4M19 12H9"/></svg>Logout</button>
+    <button class="nav" id="btnLogout"><svg viewBox="0 0 24 24"><path d="M9 4H6a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h3M15 8l4 4-4 4M19 12H9"/></svg>Kunci menu</button>
     <div class="clock"><b id="jam">--:--:--</b><span id="tglJam"></span></div>
   </nav>
   <main id="main">
-    <header class="mhead"><img class="logo" alt="Logo sekolah"><div><b>Absensi Siswa</b><span id="mSekolah"></span></div><button class="btn sm alt" id="mLogout">Logout</button></header>
+    <header class="mhead"><img class="logo" alt="Logo sekolah"><div><b>Absensi Siswa</b><span id="mSekolah"></span></div><button class="btn sm alt" id="mLogout">Kunci menu</button></header>
     <!-- SCAN -->
     <section class="view" id="v-scan" hidden>
       <div class="head"><div><h1>Scan absensi</h1><p id="scanSub"></p></div></div>
@@ -290,6 +291,7 @@ td.num,th.num{text-align:right}
 <div id="printArea"></div>
 <input type="file" id="fileXlsx" accept=".xlsx,.xls,.csv" hidden>
 <input type="file" id="fileBak" accept=".json,application/json" hidden>
+<input type="file" id="fileGabung" accept=".json,application/json" multiple hidden>
 <input type="file" id="fileFoto" accept="image/*" capture="environment" hidden>
 
 <script>/*! xlsx.js (C) 2013-present SheetJS -- http://sheetjs.com */
@@ -2627,7 +2629,7 @@ function download(name, blob) { const a = document.createElement("a"); a.href = 
 /* ============ data ============ */
 const KEY = "absensi_siswa_v1";
 let storageOK = true;
-const baru = () => ({ v: 1, seq: 10000, siswa: [], absen: {}, log: [], set: { sekolah: "SMP Pelita Nusa", jamMasuk: "07:00", jamPulang: "14:00", mode: "auto", suara: true, camId: "", pin: "123456" } });
+const baru = () => ({ v: 1, seq: 10000, siswa: [], absen: {}, log: [], set: { sekolah: "SMP Pelita Nusa", jamMasuk: "07:00", jamPulang: "14:00", mode: "auto", suara: true, camId: "", pin: "123456", perangkat: "" } });
 let DB = (() => {
   try { const r = localStorage.getItem(KEY); if (r) { const d = JSON.parse(r); if (d && Array.isArray(d.siswa) && d.absen) return Object.assign(baru(), d, { set: Object.assign(baru().set, d.set || {}) }); } }
   catch (e) { storageOK = false; }
@@ -3144,7 +3146,7 @@ function renderData() {
   const el = $("#v-data"), s = DB.set;
   el.innerHTML = '<div class="head"><div><h1>Pengaturan</h1><p>Disimpan di browser komputer ini.</p></div></div><div class="set">' +
     '<div class="panel"><h2>Sekolah dan jam</h2><div><label class="f" for="pSk">Nama sekolah</label><input type="text" id="pSk" value="' + esc(s.sekolah) + '" placeholder="Nama sekolah"></div><div class="grid2"><div><label class="f" for="pJm">Batas jam masuk</label><input type="time" id="pJm" value="' + esc(s.jamMasuk) + '"></div><div><label class="f" for="pJp">Jam pulang</label><input type="time" id="pJp" value="' + esc(s.jamPulang) + '"></div></div><p class="note" style="margin:0">Siswa yang datang setelah batas jam masuk tercatat terlambat. Pada mode Otomatis, scan sebelum jam pulang dicatat datang dan scan mulai jam pulang dicatat pulang, jadi scan ganda di gerbang pagi tidak dianggap pulang. Siswa yang pulang sebelum jam pulang ditandai pulang awal di rekap.</p><label class="chk"><input type="checkbox" id="pSn"' + (s.suara ? " checked" : "") + '>Bunyi bip setiap scan</label></div>' +
-    '<div class="panel"><h2>Kode pengaman</h2><p class="muted" style="margin:0">Dipakai untuk membuka menu Rekap, Siswa, Kartu, dan Pengaturan. Menu terkunci lagi saat Anda kembali ke Scan, atau setelah 5 menit tanpa disentuh.</p><div><label class="f" for="kLama">Kode saat ini</label><input type="password" id="kLama" inputmode="numeric" autocomplete="off"></div><div class="grid2"><div><label class="f" for="kBaru">Kode baru (4 sampai 12 angka)</label><input type="password" id="kBaru" inputmode="numeric" autocomplete="off"></div><div><label class="f" for="kUlang">Ulangi kode baru</label><input type="password" id="kUlang" inputmode="numeric" autocomplete="off"></div></div><div class="row"><button class="btn" id="kSimpan">Simpan kode</button></div>' + (s.pin === "123456" ? '<div class="note" style="color:var(--info);font-weight:600;margin:0">Kode masih bawaan (123456). Segera ganti.</div>' : "") + '</div><div class="panel"><h2>Cadangan data</h2><p class="muted">Data hanya ada di browser ini. Unduh cadangan secara berkala, dan sebelum membersihkan data browser.</p><div class="row"><button class="btn" id="bBak">Unduh cadangan</button><button class="btn alt" id="bRes">Pulihkan dari cadangan</button></div></div>' +
+    '<div class="panel"><h2>Kode pengaman</h2><p class="muted" style="margin:0">Dipakai untuk membuka menu Rekap, Siswa, Kartu, dan Pengaturan. Menu terkunci lagi saat Anda kembali ke Scan, atau setelah 5 menit tanpa disentuh.</p><div><label class="f" for="kLama">Kode saat ini</label><input type="password" id="kLama" inputmode="numeric" autocomplete="off"></div><div class="grid2"><div><label class="f" for="kBaru">Kode baru (4 sampai 12 angka)</label><input type="password" id="kBaru" inputmode="numeric" autocomplete="off"></div><div><label class="f" for="kUlang">Ulangi kode baru</label><input type="password" id="kUlang" inputmode="numeric" autocomplete="off"></div></div><div class="row"><button class="btn" id="kSimpan">Simpan kode</button></div>' + (s.pin === "123456" ? '<div class="note" style="color:var(--info);font-weight:600;margin:0">Kode masih bawaan (123456). Segera ganti.</div>' : "") + '</div><div class="panel"><h2>Gabungkan data perangkat lain</h2><p class="muted" style="margin:0">Dipakai bila absensi dilakukan di lebih dari satu perangkat, supaya rekapnya menjadi satu.</p><ol class="steps"><li>Di setiap perangkat, tekan <b>Unduh cadangan</b>.</li><li>Kumpulkan semua file cadangan ke satu perangkat (lewat WhatsApp, flashdisk, atau Google Drive).</li><li>Di perangkat itu, tekan <b>Gabungkan dari file</b> dan pilih semua file sekaligus.</li><li>Unduh rekap Excel dari menu Rekap. Agar perangkat lain ikut lengkap, unduh cadangan hasil gabungan lalu <b>Gabungkan</b> di perangkat tersebut.</li></ol><div class="tip" style="margin:0"><b>Penting:</b> impor daftar siswa dan cetak kartu hanya dari <b>satu perangkat</b>. Perangkat lain mengambil daftar siswa itu lewat Gabungkan sebelum mulai absen, supaya kode kartu sama di semua perangkat.</div><div><label class="f" for="pPr">Nama perangkat ini</label><input type="text" id="pPr" value="' + esc(s.perangkat) + '" placeholder="Contoh: Gerbang depan"></div><div class="row"><button class="btn" id="bGab">Gabungkan dari file</button></div></div><div class="panel"><h2>Cadangan data</h2><p class="muted">Data hanya ada di browser ini. Unduh cadangan secara berkala, dan sebelum membersihkan data browser.</p><div class="row"><button class="btn" id="bBak">Unduh cadangan</button><button class="btn alt" id="bRes">Pulihkan dari cadangan</button></div></div>' +
     '<div class="panel"><h2>Hapus data</h2><p class="muted">Tindakan ini tidak bisa dibatalkan. Unduh cadangan dulu.</p><div class="row"><button class="btn danger" id="bAbs">Hapus semua catatan absensi</button><button class="btn danger" id="bAll">Hapus semua data</button></div></div></div>';
   $("#pSk").onchange = e => { s.sekolah = norm(e.target.value); save(); judulSekolah(); };
   $("#pJm").onchange = e => { if (e.target.value) { s.jamMasuk = e.target.value; save(); } };
@@ -3157,7 +3159,9 @@ function renderData() {
     if (a !== b) { toast("Kedua kode baru tidak sama.", true); return; }
     s.pin = a; save(); toast("Kode pengaman diperbarui."); renderData();
   };
-  $("#bBak").onclick = () => { download("cadangan_absensi_" + ymd() + ".json", new Blob([JSON.stringify(DB)], { type: "application/json" })); toast("Cadangan diunduh."); };
+  $("#pPr").onchange = e => { s.perangkat = norm(e.target.value); save(); };
+  $("#bGab").onclick = () => $("#fileGabung").click();
+  $("#bBak").onclick = () => { download("cadangan_absensi_" + (s.perangkat ? s.perangkat.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") + "_" : "") + ymd() + ".json", new Blob([JSON.stringify(DB)], { type: "application/json" })); toast("Cadangan diunduh."); };
   $("#bRes").onclick = () => $("#fileBak").click();
   $("#bAbs").onclick = async () => { if (await konfirmasi("Hapus semua catatan absensi?", "Daftar siswa tetap ada. Semua jam datang dan pulang akan hilang.", "Ya, hapus", true)) { DB.absen = {}; DB.log = []; save(); toast("Catatan absensi dihapus."); } };
   $("#bAll").onclick = async () => { if (await konfirmasi("Hapus semua data?", "Daftar siswa dan seluruh catatan absensi akan hilang.", "Ya, hapus semua", true)) { const sk = DB.set; DB = baru(); DB.set = sk; reindex(); save(); toast("Semua data dihapus."); renderData(); } };
@@ -3171,9 +3175,55 @@ $("#fileBak").onchange = async e => {
   } catch (err) { toast("Berkas cadangan tidak valid.", true); }
 };
 
+/* ============ gabung data antar perangkat ============ */
+const kunciNK = s => norm(s.nama).toLowerCase() + "|" + norm(s.kelas).toLowerCase();
+function gabungData(o) {
+  const lap = { siswaBaru: 0, catatanBaru: 0, catatanUbah: 0, konflik: [], kodeBeda: [] };
+  const peta = new Map(), byNK = new Map(DB.siswa.map(x => [kunciNK(x), x]));
+  for (const x of o.siswa) {
+    if (!x || !x.nama || !x.kelas || x.kode === undefined) continue;
+    const sKode = byKode.get(String(x.kode).toLowerCase()), sNK = byNK.get(kunciNK(x));
+    if (sKode && kunciNK(sKode) === kunciNK(x)) { peta.set(x.id, sKode.id); continue; }
+    if (sKode) { lap.konflik.push(norm(x.nama) + " (" + norm(x.kelas) + "): kode " + x.kode + " sudah dipakai " + sKode.nama + " (" + sKode.kelas + ")"); continue; }
+    if (sNK) { peta.set(x.id, sNK.id); lap.kodeBeda.push(sNK.nama + " (" + sNK.kelas + "): kode di sini " + sNK.kode + ", di file " + x.kode); continue; }
+    const baru = { id: byId.has(x.id) ? "s" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6) : x.id, kode: String(x.kode), nama: norm(x.nama), kelas: norm(x.kelas) };
+    DB.siswa.push(baru); byKode.set(baru.kode.toLowerCase(), baru); byId.set(baru.id, baru); byNK.set(kunciNK(baru), baru); peta.set(x.id, baru.id); lap.siswaBaru++;
+    const n = parseInt(baru.kode, 10); if (!isNaN(n) && n > DB.seq) DB.seq = n;
+  }
+  for (const [tgl, day] of Object.entries(o.absen || {})) for (const [oid, r] of Object.entries(day || {})) {
+    const id = peta.get(oid); if (!id || !r) continue;
+    const mine = DB.absen[tgl] || (DB.absen[tgl] = {}), cur = mine[id];
+    if (!cur) { mine[id] = { in: r.in || null, out: r.out || null, ket: r.ket || "" }; lap.catatanBaru++; continue; }
+    let ubah = false;
+    if (r.in && (!cur.in || r.in < cur.in)) { cur.in = r.in; ubah = true; }
+    if (r.out && (!cur.out || r.out > cur.out)) { cur.out = r.out; ubah = true; }
+    if (!cur.ket && r.ket && !cur.in) { cur.ket = r.ket; ubah = true; }
+    if (ubah) lap.catatanUbah++;
+  }
+  const ada = new Set(DB.log.map(l => l.t + "|" + l.id + "|" + l.a));
+  for (const l of o.log || []) { const id = peta.get(l.id); if (id && !ada.has(l.t + "|" + id + "|" + l.a)) { DB.log.push({ t: l.t, id, a: l.a }); ada.add(l.t + "|" + id + "|" + l.a); } }
+  DB.log.sort((a, b) => a.t - b.t);
+  reindex(); return lap;
+}
+const hitungCatatan = o => Object.values(o.absen || {}).reduce((n, d) => n + Object.keys(d || {}).length, 0);
+$("#fileGabung").onchange = async e => {
+  const files = [...e.target.files]; e.target.value = ""; if (!files.length) return;
+  const ok = [], gagal = [];
+  for (const f of files) { try { const d = JSON.parse(await f.text()); if (!d || !Array.isArray(d.siswa) || typeof d.absen !== "object") throw 0; ok.push({ f, d }); } catch (x) { gagal.push(f.name); } }
+  if (!ok.length) { await modal({ title: "File tidak valid", body: "<p>File yang dipilih bukan cadangan dari aplikasi absensi ini.</p>", acts: [{ label: "Mengerti", val: true }] }); return; }
+  const daftar = '<ul class="klist" style="flex-direction:column">' + ok.map(({ f, d }) => "<li><b>" + esc(f.name) + "</b><br>" + (d.set && d.set.perangkat ? esc(d.set.perangkat) + " · " : "") + d.siswa.length + " siswa, " + Object.keys(d.absen).length + " hari, " + hitungCatatan(d) + " catatan</li>").join("") + "</ul>" + (gagal.length ? '<p class="note">Dilewati karena tidak valid: ' + esc(gagal.join(", ")) + "</p>" : "");
+  if (!(await modal({ title: "Gabungkan " + ok.length + " file?", body: "<p>Data di perangkat ini ditambah isi file berikut. Catatan yang sudah ada tidak dihapus.</p>" + daftar, acts: [{ label: "Batal", cls: "alt", val: false }, { label: "Gabungkan", val: true }] }))) return;
+  const t = { siswaBaru: 0, catatanBaru: 0, catatanUbah: 0, konflik: [], kodeBeda: [] };
+  ok.forEach(({ d }) => { const l = gabungData(d); t.siswaBaru += l.siswaBaru; t.catatanBaru += l.catatanBaru; t.catatanUbah += l.catatanUbah; t.konflik.push(...l.konflik); t.kodeBeda.push(...l.kodeBeda); });
+  save();
+  const perlu = t.siswaBaru + t.catatanBaru + t.catatanUbah;
+  const daftarMasalah = (judul, arr) => arr.length ? "<p style='margin-top:12px'><b>" + judul + " (" + arr.length + ")</b></p><ul class='klist' style='flex-direction:column'>" + arr.slice(0, 8).map(x => "<li>" + esc(x) + "</li>").join("") + (arr.length > 8 ? "<li>dan " + (arr.length - 8) + " lainnya</li>" : "") + "</ul>" : "";
+  await modal({ title: perlu ? "Penggabungan selesai" : "Tidak ada yang baru", body: "<p>" + (perlu ? t.siswaBaru + " siswa baru, " + t.catatanBaru + " catatan absensi baru, " + t.catatanUbah + " catatan diperbarui (jam datang lebih awal atau jam pulang lebih akhir)." : "Semua isi file sudah ada di perangkat ini.") + "</p>" + daftarMasalah("Siswa dilewati karena kode bentrok", t.konflik) + daftarMasalah("Siswa sama tetapi kodenya berbeda", t.kodeBeda), acts: [{ label: "Mengerti", val: true }] });
+  if (view === "data") renderData();
+};
+
 /* ============ masuk dan keluar ============ */
-let loggedIn = false;
-try { loggedIn = sessionStorage.getItem("absen_login") === "1"; } catch (e) {}
+let loggedIn = true; /* masuk aplikasi tanpa kode; kode hanya untuk menu Rekap, Siswa, Kartu, Pengaturan */
 function aturGate() {
   $("#gate").hidden = loggedIn; $(".shell").inert = !loggedIn;
   if (!loggedIn) { $("#gSekolah").textContent = namaSekolah(); $("#gPin").value = ""; $("#gErr").textContent = ""; setTimeout(() => $("#gPin").focus(), 50); }
@@ -3184,10 +3234,8 @@ $("#gateForm").onsubmit = e => {
   else { $("#gErr").textContent = "Kode pengaman salah. Coba lagi."; $("#gPin").select(); }
 };
 async function logout() {
-  if (!(await konfirmasi("Keluar dari aplikasi?", "Kamera dimatikan dan aplikasi terkunci. Data tetap tersimpan. Untuk masuk lagi diperlukan kode pengaman.", "Ya, logout"))) return;
-  stopCam(); unlocked = false; document.body.classList.remove("open"); loggedIn = false;
-  try { sessionStorage.removeItem("absen_login"); } catch (e) {}
-  aturGate(); try { window.close(); } catch (e) {}
+  if (!(await konfirmasi("Kunci menu dan matikan kamera?", "Menu Rekap, Siswa, Kartu dan Pengaturan akan terkunci lagi. Data tetap tersimpan.", "Ya, kunci"))) return;
+  stopCam(); unlocked = false; document.body.classList.remove("open"); go("scan"); toast("Menu terkunci.");
 }
 $("#btnLogout").onclick = logout; $("#mLogout").onclick = logout;
 
